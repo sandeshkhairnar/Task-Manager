@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <item name="taskNameEditText" type="id" />
+    <item name="timeAssignButton" type="id" />
+    <item name="descriptionEditText" type="id" />
+    <item name="repeatSpinner" type="id" />
+    <item name="saveTaskButton" type="id" />
+    <item name="dialogTaskNameEditText" type="id" />
+    <item name="dialogTimeAssignEditText" type="id" />
+    <item name="dialogDescriptionEditText" type="id" />
+    <item name="dialogRepeatSpinner" type="id" />
+    <item name="dialogAddTaskButton" type="id" />
+</resources>
