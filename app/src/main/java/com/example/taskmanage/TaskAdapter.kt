@@ -1,7 +1,6 @@
 // File: TaskAdapter.kt
 package com.example.taskmanage
 
-import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 class TaskAdapter(
     private val lifecycleOwner: LifecycleOwner,
     private val taskViewModel: TaskViewModel,
-    private val startTaskTimer: (Task) -> Unit
+    kFunction1: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     private var taskList: MutableList<Task> = mutableListOf()
@@ -28,54 +27,38 @@ class TaskAdapter(
     }
 
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val taskNameTextView: TextView = view.findViewById(R.id.taskNameTextView)
-        val countdownTextView: TextView = view.findViewById(R.id.countdownTextView)
-        val progressBar: ProgressBar = view.findViewById(R.id.taskProgressBar)
-        val pauseResumeButton: Button = view.findViewById(R.id.pauseResumeButton)
-        private var countDownTimer: CountDownTimer? = null
+        private val taskNameTextView: TextView = view.findViewById(R.id.taskNameTextView)
+        private val countdownTextView: TextView = view.findViewById(R.id.countdownTextView)
+        private val progressBar: ProgressBar = view.findViewById(R.id.taskProgressBar)
+        private val pauseResumeButton: Button = view.findViewById(R.id.pauseResumeButton)
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
             progressBar.max = task.timeAssign.toInt()
             progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
             updateCountdownText(task)
-
-            pauseResumeButton.text = if (task.isPaused) "Start" else "Pause"
+            updateButtonState(task)
 
             pauseResumeButton.setOnClickListener {
-                task.isPaused = !task.isPaused
                 if (task.isPaused) {
-                    countDownTimer?.cancel()
-                    countDownTimer = null
-                    pauseResumeButton.text = "Start"
+                    taskViewModel.resumeTask(task)
                 } else {
-                    startCountdown(task)
-                    pauseResumeButton.text = "Pause"
+                    taskViewModel.pauseTask(task)
                 }
-                taskViewModel.updateTask(task)  // Save state change
+                updateButtonState(task)
             }
 
-            if (!task.isPaused && task.remainingTime > 0) {
-                startCountdown(task)
-            }
+            // Observe currentTask to update UI accordingly
+            taskViewModel.currentTask.observe(lifecycleOwner, Observer { currentTask ->
+                if (currentTask?.id == task.id) {
+                    updateCountdownText(currentTask)
+                    progressBar.progress = (currentTask.timeAssign - currentTask.remainingTime).toInt()
+                }
+            })
         }
 
-        private fun startCountdown(task: Task) {
-            countDownTimer?.cancel()
-            countDownTimer = object : CountDownTimer(task.remainingTime, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    task.remainingTime = millisUntilFinished
-                    updateCountdownText(task)
-                    progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
-                    taskViewModel.updateTask(task)  // Save ongoing timer state
-                }
-
-                override fun onFinish() {
-                    task.isCompleted = true
-                    taskViewModel.removeTask(task)
-                    startTaskTimer(task)
-                }
-            }.start()
+        private fun updateButtonState(task: Task) {
+            pauseResumeButton.text = if (task.isPaused) "Start" else "Pause"
         }
 
         private fun updateCountdownText(task: Task) {
@@ -85,6 +68,9 @@ class TaskAdapter(
             countdownTextView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
         }
     }
+
+    // ... rest of the adapter implementation
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)

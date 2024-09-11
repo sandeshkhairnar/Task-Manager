@@ -25,6 +25,7 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         countDownTimer = object : CountDownTimer(task.remainingTime, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 task.remainingTime = millisUntilFinished
+                _currentTask.value = task // Update the LiveData
                 updateTask(task) // Update the task in the database
             }
 
@@ -32,8 +33,20 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
                 task.isCompleted = true
                 removeTask(task)
                 addCompletedTask(task)
+                _currentTask.value = null
             }
         }.start()
+    }
+
+    fun pauseTask(task: Task) {
+        countDownTimer?.cancel()
+        task.isPaused = true
+        updateTask(task)
+    }
+
+    fun resumeTask(task: Task) {
+        task.isPaused = false
+        startTaskTimer(task)
     }
 
     fun stopTaskTimer() {

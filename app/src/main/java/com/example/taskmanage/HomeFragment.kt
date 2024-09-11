@@ -38,7 +38,7 @@ class HomeFragment : Fragment() {
         recyclerView.adapter = taskAdapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        completedTaskAdapter = TaskAdapter(viewLifecycleOwner, taskViewModel, {})
+        completedTaskAdapter = TaskAdapter(viewLifecycleOwner, taskViewModel) {}
         val completedRecyclerView: RecyclerView = view.findViewById(R.id.completedTaskRecyclerView)
         completedRecyclerView.adapter = completedTaskAdapter
         completedRecyclerView.layoutManager = LinearLayoutManager(requireContext())
