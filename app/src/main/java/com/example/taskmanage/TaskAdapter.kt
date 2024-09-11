@@ -1,9 +1,7 @@
 // File: TaskAdapter.kt
 package com.example.taskmanage
 
-
 import android.os.CountDownTimer
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +17,7 @@ class TaskAdapter(
     private val taskViewModel: TaskViewModel,
     private val startTaskTimer: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+
     private var taskList: MutableList<Task> = mutableListOf()
 
     init {
@@ -53,7 +52,7 @@ class TaskAdapter(
                     startCountdown(task)
                     pauseResumeButton.text = "Pause"
                 }
-                taskViewModel.addTask(task)
+                taskViewModel.updateTask(task)  // Save state change
             }
 
             if (!task.isPaused && task.remainingTime > 0) {
@@ -68,6 +67,7 @@ class TaskAdapter(
                     task.remainingTime = millisUntilFinished
                     updateCountdownText(task)
                     progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
+                    taskViewModel.updateTask(task)  // Save ongoing timer state
                 }
 
                 override fun onFinish() {

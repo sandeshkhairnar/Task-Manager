@@ -4,7 +4,7 @@ package com.example.taskmanage
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "task_table")
+@Entity(tableName = "tasks")
 data class Task(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
@@ -14,5 +14,5 @@ data class Task(
     var remainingTime: Long,
     val timeAssign: Long,
     var isCompleted: Boolean = false,
-    var isPaused: Boolean
+    var isPaused: Boolean = false
 )

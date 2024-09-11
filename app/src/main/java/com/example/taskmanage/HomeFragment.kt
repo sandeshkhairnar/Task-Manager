@@ -1,9 +1,7 @@
-// File: HomeFragment.kt
 package com.example.taskmanage
 
 import android.app.TimePickerDialog
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +9,6 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
@@ -27,7 +24,6 @@ class HomeFragment : Fragment() {
     private lateinit var completedTaskAdapter: TaskAdapter
     private lateinit var timeAssignTextView: TextView
     private var selectedTimeInMillis: Long = 0
-    private var countDownTimer: CountDownTimer? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,12 +44,17 @@ class HomeFragment : Fragment() {
         completedRecyclerView.layoutManager = LinearLayoutManager(requireContext())
 
         // Observe task lists from ViewModel
-        taskViewModel.taskList.observe(viewLifecycleOwner) { tasks ->
+        taskViewModel.taskList.observe(viewLifecycleOwner) {
             taskAdapter.notifyDataSetChanged()
         }
 
-        taskViewModel.completedTaskList.observe(viewLifecycleOwner) { tasks ->
+        taskViewModel.completedTaskList.observe(viewLifecycleOwner) {
             completedTaskAdapter.notifyDataSetChanged()
+        }
+
+        // Observe current running task for timer updates
+        taskViewModel.currentTask.observe(viewLifecycleOwner) { task ->
+            // Update UI when a task is running or completed
         }
 
         // Set up Add Task button
@@ -68,14 +69,13 @@ class HomeFragment : Fragment() {
     private fun showAddTaskDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_task, null)
 
-        // Initialize UI elements
-        val taskNameEditText: EditText = dialogView.findViewById(R.id.dialogTaskNameEditText)
+        // Initialize UI elements with null checks to avoid NullPointerException
+        val taskNameEditText: EditText? = dialogView.findViewById(R.id.dialogTaskNameEditText)
         timeAssignTextView = dialogView.findViewById(R.id.dialogTimeAssignTextView)
-        val descriptionEditText: EditText = dialogView.findViewById(R.id.dialogDescriptionEditText)
-        val repeatSpinner: Spinner = dialogView.findViewById(R.id.dialogRepeatSpinner)
+        val descriptionEditText: EditText? = dialogView.findViewById(R.id.dialogDescriptionEditText)
+        val repeatSpinner: Spinner? = dialogView.findViewById(R.id.dialogRepeatSpinner)
 
-        // Set up a default time value to prevent NullPointerException
-        selectedTimeInMillis = 0L
+        selectedTimeInMillis = 0L // Default time value
 
         // Set up time picker dialog
         timeAssignTextView.setOnClickListener {
@@ -86,14 +86,14 @@ class HomeFragment : Fragment() {
             .setView(dialogView)
             .setTitle("Add New Task")
             .setPositiveButton("Add Task") { dialog, _ ->
-                val taskName = taskNameEditText.text?.toString().orEmpty()
-                val timeAssign = selectedTimeInMillis // Ensure selectedTimeInMillis is being passed
-                val description = descriptionEditText.text?.toString().orEmpty()
-                val repeatOption = repeatSpinner.selectedItem?.toString() ?: "No Repeat" // Default value to avoid null
+                // Get text and handle potential nulls gracefully
+                val taskName = taskNameEditText?.text?.toString()?.trim() ?: ""
+                val timeAssign = selectedTimeInMillis
+                val description = descriptionEditText?.text?.toString()?.trim() ?: ""
+                val repeatOption = repeatSpinner?.selectedItem?.toString() ?: ""
 
-                // Ensure task name is not blank and timeAssign is valid
+                // Validate input fields
                 if (taskName.isNotBlank() && timeAssign > 0) {
-                    // Create a task object and add it to the ViewModel
                     val task = Task(
                         name = taskName,
                         timeInMillis = timeAssign,
@@ -101,23 +101,23 @@ class HomeFragment : Fragment() {
                         repeatOption = repeatOption,
                         remainingTime = timeAssign,
                         timeAssign = timeAssign,
-                        isPaused = false // Default value for isPaused
+                        isPaused = false
                     )
-                    taskViewModel.addTask(task) // Add task to ViewModel
+                    taskViewModel.addTask(task)
                 } else {
-                    // Provide user feedback if the task is invalid
-                    Toast.makeText(requireContext(), "Please fill in all fields and set a time.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Please fill in all fields and set a time.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
 
                 dialog.dismiss()
             }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
 
         dialogBuilder.create().show()
     }
-
 
     private fun showTimePickerDialog() {
         val calendar = Calendar.getInstance()
@@ -127,11 +127,11 @@ class HomeFragment : Fragment() {
         val timePickerDialog = TimePickerDialog(
             requireContext(),
             { _, selectedHour, selectedMinute ->
-                // Convert selected time into milliseconds
+                // Convert selected time to milliseconds
                 val hoursInMillis = selectedHour * 3600 * 1000
                 val minutesInMillis = selectedMinute * 60 * 1000
-                val secondsInMillis = 0 // Assuming seconds are not needed here
-                selectedTimeInMillis = (hoursInMillis + minutesInMillis + secondsInMillis).toLong()
+                selectedTimeInMillis = (hoursInMillis + minutesInMillis).toLong()
+                // Update the TextView with the selected time
                 timeAssignTextView.text = String.format("%02d:%02d:00", selectedHour, selectedMinute)
             },
             hour,
@@ -143,21 +143,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun startTaskTimer(task: Task) {
-        countDownTimer?.cancel() // Cancel any previous timer
-
-        countDownTimer = object : CountDownTimer(task.timeAssign, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                task.remainingTime = millisUntilFinished // Update remaining time
-                taskViewModel.updateTask(task) // Update task in ViewModel
-                // Optionally update UI with remaining time
-            }
-
-            override fun onFinish() {
-                task.isCompleted = true
-                taskViewModel.removeTask(task) // Remove the task from ViewModel
-                taskViewModel.addCompletedTask(task) // Add to completed tasks
-                Toast.makeText(requireContext(), "Task '${task.name}' completed!", Toast.LENGTH_SHORT).show()
-            }
-        }.start()
+        taskViewModel.startTaskTimer(task) // Start the timer via ViewModel
     }
 }

@@ -1,14 +1,45 @@
 // File: TaskViewModel.kt
 package com.example.taskmanage
 
-import androidx.lifecycle.ViewModel
+import android.os.CountDownTimer
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
 class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
-    val taskList: LiveData<List<Task>> = repository.getActiveTasks()
+
+    val taskList: LiveData<List<Task>> = repository.getTasks()
     val completedTaskList: LiveData<List<Task>> = repository.getCompletedTasks()
+
+    private val _currentTask = MutableLiveData<Task?>()
+    val currentTask: LiveData<Task?> get() = _currentTask
+
+    private var countDownTimer: CountDownTimer? = null
+
+    fun startTaskTimer(task: Task) {
+        _currentTask.value = task
+        countDownTimer?.cancel() // Cancel any existing timer
+
+        countDownTimer = object : CountDownTimer(task.remainingTime, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                task.remainingTime = millisUntilFinished
+                updateTask(task) // Update the task in the database
+            }
+
+            override fun onFinish() {
+                task.isCompleted = true
+                removeTask(task)
+                addCompletedTask(task)
+            }
+        }.start()
+    }
+
+    fun stopTaskTimer() {
+        countDownTimer?.cancel()
+        _currentTask.value = null
+    }
 
     fun addTask(task: Task) {
         viewModelScope.launch {
@@ -16,22 +47,21 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         }
     }
 
+    fun updateTask(task: Task) {
+        viewModelScope.launch {
+            repository.updateTask(task)
+        }
+    }
+
     fun removeTask(task: Task) {
         viewModelScope.launch {
-            repository.deleteTask(task.id)
+            repository.deleteTask(task)
         }
     }
 
     fun addCompletedTask(task: Task) {
         viewModelScope.launch {
-            val updatedTask = task.copy(isCompleted = true)
-            repository.updateTask(updatedTask)
-        }
-    }
-
-    fun updateTask(task: Task) {
-        viewModelScope.launch {
-            repository.updateTask(task)
+            repository.insertCompletedTask(task)
         }
     }
 }
