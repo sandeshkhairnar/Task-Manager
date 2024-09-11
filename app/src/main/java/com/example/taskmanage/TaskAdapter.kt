@@ -1,4 +1,3 @@
-// File: TaskAdapter.kt
 package com.example.taskmanage
 
 import android.view.LayoutInflater
@@ -9,28 +8,22 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 
 class TaskAdapter(
     private val lifecycleOwner: LifecycleOwner,
     private val taskViewModel: TaskViewModel,
-    kFunction1: (Task) -> Unit
-) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
-
-    private var taskList: MutableList<Task> = mutableListOf()
-
-    init {
-        taskViewModel.taskList.observe(lifecycleOwner, Observer { tasks ->
-            taskList = tasks.toMutableList()
-            notifyDataSetChanged()
-        })
-    }
+    private val onTaskCompleted: (Task) -> Unit
+) : ListAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val taskNameTextView: TextView = view.findViewById(R.id.taskNameTextView)
         private val countdownTextView: TextView = view.findViewById(R.id.countdownTextView)
         private val progressBar: ProgressBar = view.findViewById(R.id.taskProgressBar)
         private val pauseResumeButton: Button = view.findViewById(R.id.pauseResumeButton)
+        private val completeButton: Button = view.findViewById(R.id.completeButton)
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
@@ -48,7 +41,10 @@ class TaskAdapter(
                 updateButtonState(task)
             }
 
-            // Observe currentTask to update UI accordingly
+            completeButton.setOnClickListener {
+                onTaskCompleted(task)
+            }
+
             taskViewModel.currentTask.observe(lifecycleOwner, Observer { currentTask ->
                 if (currentTask?.id == task.id) {
                     updateCountdownText(currentTask)
@@ -58,7 +54,7 @@ class TaskAdapter(
         }
 
         private fun updateButtonState(task: Task) {
-            pauseResumeButton.text = if (task.isPaused) "Start" else "Pause"
+            pauseResumeButton.text = if (task.isPaused) "Resume" else "Pause"
         }
 
         private fun updateCountdownText(task: Task) {
@@ -69,19 +65,22 @@ class TaskAdapter(
         }
     }
 
-    // ... rest of the adapter implementation
-
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)
         return TaskViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
-        holder.bind(taskList[position])
+        holder.bind(getItem(position))
+    }
+}
+
+class TaskDiffCallback : DiffUtil.ItemCallback<Task>() {
+    override fun areItemsTheSame(oldItem: Task, newItem: Task): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun getItemCount(): Int {
-        return taskList.size
+    override fun areContentsTheSame(oldItem: Task, newItem: Task): Boolean {
+        return oldItem == newItem
     }
 }

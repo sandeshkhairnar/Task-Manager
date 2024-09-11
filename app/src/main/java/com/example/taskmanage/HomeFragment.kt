@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import android.util.Log
 import java.util.*
 
 class HomeFragment : Fragment() {
@@ -21,7 +22,7 @@ class HomeFragment : Fragment() {
     }
 
     private lateinit var taskAdapter: TaskAdapter
-    private lateinit var completedTaskAdapter: TaskAdapter
+    private lateinit var completedTaskAdapter: CompletedTaskAdapter
     private lateinit var timeAssignTextView: TextView
     private var selectedTimeInMillis: Long = 0
 
@@ -32,52 +33,79 @@ class HomeFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        // Initialize RecyclerViews
-        taskAdapter = TaskAdapter(viewLifecycleOwner, taskViewModel, ::startTaskTimer)
+        initializeTaskRecyclerView(view)
+        initializeCompletedTaskRecyclerView(view)
+        observeTaskLists()
+        observeCurrentTask()
+        setupAddTaskButton(view)
+
+        return view
+    }
+
+    private fun initializeTaskRecyclerView(view: View) {
+        taskAdapter = TaskAdapter(
+            viewLifecycleOwner,
+            taskViewModel
+        ) { task ->
+            taskViewModel.completeTask(task)
+            Log.d("HomeFragment", "Task completed: ${task.name}")
+        }
         val recyclerView: RecyclerView = view.findViewById(R.id.taskRecyclerView)
         recyclerView.adapter = taskAdapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
+    }
 
-        completedTaskAdapter = TaskAdapter(viewLifecycleOwner, taskViewModel) {}
+    private fun initializeCompletedTaskRecyclerView(view: View) {
+        completedTaskAdapter = CompletedTaskAdapter(
+            onItemClick = { task ->
+                // Handle completed task click if needed
+                Log.d("HomeFragment", "Completed task clicked: ${task.name}")
+            },
+            viewLifecycleOwner = viewLifecycleOwner,
+            param = { /* Additional param function if needed */ }
+        )
         val completedRecyclerView: RecyclerView = view.findViewById(R.id.completedTaskRecyclerView)
         completedRecyclerView.adapter = completedTaskAdapter
         completedRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    }
 
-        // Observe task lists from ViewModel
-        taskViewModel.taskList.observe(viewLifecycleOwner) {
-            taskAdapter.notifyDataSetChanged()
+    private fun observeTaskLists() {
+        taskViewModel.taskList.observe(viewLifecycleOwner) { tasks ->
+            val ongoingTasks = tasks.filter { !it.isCompleted }
+            taskAdapter.submitList(ongoingTasks)
+            Log.d("HomeFragment", "Ongoing tasks updated: ${ongoingTasks.size}")
         }
 
-        taskViewModel.completedTaskList.observe(viewLifecycleOwner) {
-            completedTaskAdapter.notifyDataSetChanged()
+        taskViewModel.completedTaskList.observe(viewLifecycleOwner) { completedTasks ->
+            completedTaskAdapter.submitList(completedTasks)
+            Log.d("HomeFragment", "Completed tasks updated: ${completedTasks.size}")
         }
+    }
 
-        // Observe current running task for timer updates
+    private fun observeCurrentTask() {
         taskViewModel.currentTask.observe(viewLifecycleOwner) { task ->
             // Update UI when a task is running or completed
+            Log.d("HomeFragment", "Current task updated: ${task?.name}")
         }
+    }
 
-        // Set up Add Task button
+    private fun setupAddTaskButton(view: View) {
         val addTaskButton: Button = view.findViewById(R.id.addTaskButton)
         addTaskButton.setOnClickListener {
             showAddTaskDialog()
         }
-
-        return view
     }
 
     private fun showAddTaskDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_task, null)
 
-        // Initialize UI elements with null checks to avoid NullPointerException
-        val taskNameEditText: EditText? = dialogView.findViewById(R.id.dialogTaskNameEditText)
+        val taskNameEditText: EditText = dialogView.findViewById(R.id.dialogTaskNameEditText)
         timeAssignTextView = dialogView.findViewById(R.id.dialogTimeAssignTextView)
-        val descriptionEditText: EditText? = dialogView.findViewById(R.id.dialogDescriptionEditText)
-        val repeatSpinner: Spinner? = dialogView.findViewById(R.id.dialogRepeatSpinner)
+        val descriptionEditText: EditText = dialogView.findViewById(R.id.dialogDescriptionEditText)
+        val repeatSpinner: Spinner = dialogView.findViewById(R.id.dialogRepeatSpinner)
 
-        selectedTimeInMillis = 0L // Default time value
+        selectedTimeInMillis = 0L
 
-        // Set up time picker dialog
         timeAssignTextView.setOnClickListener {
             showTimePickerDialog()
         }
@@ -86,13 +114,11 @@ class HomeFragment : Fragment() {
             .setView(dialogView)
             .setTitle("Add New Task")
             .setPositiveButton("Add Task") { dialog, _ ->
-                // Get text and handle potential nulls gracefully
-                val taskName = taskNameEditText?.text?.toString()?.trim() ?: ""
+                val taskName = taskNameEditText.text.toString().trim()
                 val timeAssign = selectedTimeInMillis
-                val description = descriptionEditText?.text?.toString()?.trim() ?: ""
-                val repeatOption = repeatSpinner?.selectedItem?.toString() ?: ""
+                val description = descriptionEditText.text.toString().trim()
+                val repeatOption = repeatSpinner.selectedItem?.toString() ?: "None" // Provide a default value if null
 
-                // Validate input fields
                 if (taskName.isNotBlank() && timeAssign > 0) {
                     val task = Task(
                         name = taskName,
@@ -101,9 +127,12 @@ class HomeFragment : Fragment() {
                         repeatOption = repeatOption,
                         remainingTime = timeAssign,
                         timeAssign = timeAssign,
-                        isPaused = false
+                        isPaused = false,
+                        isCompleted = false,
+                        completionTime = 0L
                     )
                     taskViewModel.addTask(task)
+                    Log.d("HomeFragment", "New task added: $taskName")
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -127,11 +156,9 @@ class HomeFragment : Fragment() {
         val timePickerDialog = TimePickerDialog(
             requireContext(),
             { _, selectedHour, selectedMinute ->
-                // Convert selected time to milliseconds
                 val hoursInMillis = selectedHour * 3600 * 1000
                 val minutesInMillis = selectedMinute * 60 * 1000
                 selectedTimeInMillis = (hoursInMillis + minutesInMillis).toLong()
-                // Update the TextView with the selected time
                 timeAssignTextView.text = String.format("%02d:%02d:00", selectedHour, selectedMinute)
             },
             hour,
@@ -140,9 +167,5 @@ class HomeFragment : Fragment() {
         )
 
         timePickerDialog.show()
-    }
-
-    private fun startTaskTimer(task: Task) {
-        taskViewModel.startTaskTimer(task) // Start the timer via ViewModel
     }
 }

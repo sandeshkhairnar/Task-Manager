@@ -38,6 +38,13 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         }.start()
     }
 
+    fun completeTask(task: Task) {
+        viewModelScope.launch {
+            repository.deleteTask(task)
+            repository.insertCompletedTask(task.copy(isCompleted = true))
+        }
+    }
+
     fun pauseTask(task: Task) {
         countDownTimer?.cancel()
         task.isPaused = true
