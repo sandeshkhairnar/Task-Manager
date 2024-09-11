@@ -1,6 +1,7 @@
 // File: TaskAdapter.kt
 package com.example.taskmanage
 
+
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,7 +19,6 @@ class TaskAdapter(
     private val taskViewModel: TaskViewModel,
     private val startTaskTimer: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
-
     private var taskList: MutableList<Task> = mutableListOf()
 
     init {
