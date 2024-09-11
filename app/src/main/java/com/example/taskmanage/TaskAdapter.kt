@@ -1,3 +1,4 @@
+// File: TaskAdapter.kt
 package com.example.taskmanage
 
 import android.os.CountDownTimer
@@ -8,12 +9,25 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 
 class TaskAdapter(
-    private val taskList: MutableList<Task>,
+    private val lifecycleOwner: LifecycleOwner,
+    private val taskViewModel: TaskViewModel, // ViewModel to handle task data
     private val startTaskTimer: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
+
+    private var taskList: MutableList<Task> = mutableListOf()
+
+    init {
+        // Observe the task list from the ViewModel
+        taskViewModel.taskList.observe(lifecycleOwner, Observer { tasks ->
+            taskList = tasks.toMutableList()
+            notifyDataSetChanged() // Update the adapter when the task list changes
+        })
+    }
 
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val taskNameTextView: TextView = view.findViewById(R.id.taskNameTextView)
@@ -36,14 +50,9 @@ class TaskAdapter(
                 override fun onFinish() {
                     Log.d("TaskAdapter", "OnFinish: Task '${task.name}' completed.")
                     task.isCompleted = true
-                    // Remove task from active list and add to completed
-                    taskList.remove(task)
-                    notifyDataSetChanged() // Notify adapter of task removal
-                    // Notify HomeFragment to update completed tasks if necessary
-                    startTaskTimer(task) // This should only be called if you need to handle post-completion actions
+                    taskViewModel.removeTask(task) // Remove the completed task from ViewModel
+                    startTaskTimer(task) // Optional: handle post-completion actions
                 }
-
-
             }.start()
         }
 
@@ -66,6 +75,7 @@ class TaskAdapter(
                     startCountdown(task)
                     pauseResumeButton.text = "Pause"
                 }
+                taskViewModel.addTask(task) // Update task in ViewModel when paused/resumed
             }
 
             // Start countdown if task is not paused and remaining time is valid
@@ -73,7 +83,6 @@ class TaskAdapter(
                 startCountdown(task)
             }
         }
-
 
         private fun updateCountdownText(task: Task) {
             val seconds = (task.remainingTime / 1000) % 60

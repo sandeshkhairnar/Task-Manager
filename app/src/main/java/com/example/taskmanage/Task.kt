@@ -1,13 +1,18 @@
+// File: Task.kt
 package com.example.taskmanage
 
-data class Task(
-    val name: String,
-    var timeInMillis: Long, // Total time assigned to the task
-    var description: String,
-    var repeatOption: String,
-    var remainingTime: Long = timeInMillis, // Remaining time
-    var isPaused: Boolean = true, // Paused state
-    var isCompleted: Boolean = false, // Completion status
-    val timeAssign: Long,           // Time assigned in milliseconds
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
+@Entity(tableName = "task_table")
+data class Task(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String,
+    val timeInMillis: Long,
+    val description: String,
+    val repeatOption: String,
+    var remainingTime: Long,
+    val timeAssign: Long,
+    var isCompleted: Boolean = false,
+    var isPaused: Boolean = false
 )

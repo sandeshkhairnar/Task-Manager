@@ -1,18 +1,15 @@
+// File: MainActivity.kt
 package com.example.taskmanage
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
     private var currentFragment: Fragment? = null
     private lateinit var bottomNavigationView: BottomNavigationView
-    private val taskList: MutableList<Task> = mutableListOf() // To store tasks
-    private lateinit var taskAdapter: TaskAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         currentFragment = fragment
         supportFragmentManager.beginTransaction()
             .replace(R.id.frame_layout, fragment)
-            .setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_OPEN) // Optional transition animation
-            .commitAllowingStateLoss() // Use commitAllowingStateLoss if you encounter issues with state saving
+            .setTransition(androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .commitAllowingStateLoss()
     }
 }

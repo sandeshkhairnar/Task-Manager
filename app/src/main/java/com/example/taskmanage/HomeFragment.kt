@@ -1,3 +1,4 @@
+// File: HomeFragment.kt
 package com.example.taskmanage
 
 import android.app.TimePickerDialog
@@ -9,14 +10,19 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
 class HomeFragment : Fragment() {
 
-    private val taskList: MutableList<Task> = mutableListOf()
-    private val completedTaskList: MutableList<Task> = mutableListOf()
+    private val taskViewModel: TaskViewModel by viewModels {
+        val repository = TaskRepository(TaskDatabase.getDatabase(requireContext()).taskDao())
+        TaskViewModelFactory(repository)
+    }
+
     private lateinit var taskAdapter: TaskAdapter
     private lateinit var completedTaskAdapter: TaskAdapter
     private lateinit var timeAssignTextView: TextView
@@ -31,15 +37,24 @@ class HomeFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
         // Initialize RecyclerViews
-        taskAdapter = TaskAdapter(taskList, ::startTaskTimer)
+        taskAdapter = TaskAdapter(viewLifecycleOwner, taskViewModel, ::startTaskTimer)
         val recyclerView: RecyclerView = view.findViewById(R.id.taskRecyclerView)
         recyclerView.adapter = taskAdapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
 
-        completedTaskAdapter = TaskAdapter(completedTaskList, {})
+        completedTaskAdapter = TaskAdapter(viewLifecycleOwner, taskViewModel, {})
         val completedRecyclerView: RecyclerView = view.findViewById(R.id.completedTaskRecyclerView)
         completedRecyclerView.adapter = completedTaskAdapter
         completedRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        // Observe task lists from ViewModel
+        taskViewModel.taskList.observe(viewLifecycleOwner) { tasks ->
+            taskAdapter.notifyDataSetChanged()
+        }
+
+        taskViewModel.completedTaskList.observe(viewLifecycleOwner) { tasks ->
+            completedTaskAdapter.notifyDataSetChanged()
+        }
 
         // Set up Add Task button
         val addTaskButton: Button = view.findViewById(R.id.addTaskButton)
@@ -78,7 +93,7 @@ class HomeFragment : Fragment() {
 
                 // Ensure task name is not blank and timeAssign is valid
                 if (taskName.isNotBlank() && timeAssign > 0) {
-                    // Create a task object and add it to the list
+                    // Create a task object and add it to the ViewModel
                     val task = Task(
                         name = taskName,
                         timeInMillis = timeAssign,
@@ -87,8 +102,7 @@ class HomeFragment : Fragment() {
                         remainingTime = timeAssign,
                         timeAssign = timeAssign
                     )
-                    taskList.add(task)
-                    taskAdapter.notifyDataSetChanged() // Notify adapter of data change
+                    taskViewModel.addTask(task) // Add task to ViewModel
                 } else {
                     // Provide user feedback if the task is invalid
                     Toast.makeText(requireContext(), "Please fill in all fields and set a time.", Toast.LENGTH_SHORT).show()
@@ -102,8 +116,6 @@ class HomeFragment : Fragment() {
 
         dialogBuilder.create().show()
     }
-
-
 
     private fun showTimePickerDialog() {
         val calendar = Calendar.getInstance()
@@ -128,25 +140,22 @@ class HomeFragment : Fragment() {
         timePickerDialog.show()
     }
 
-
     private fun startTaskTimer(task: Task) {
         countDownTimer?.cancel() // Cancel any previous timer
 
         countDownTimer = object : CountDownTimer(task.timeAssign, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 task.remainingTime = millisUntilFinished // Update remaining time
+                taskViewModel.updateTask(task) // Update task in ViewModel
                 // Optionally update UI with remaining time
             }
 
             override fun onFinish() {
                 task.isCompleted = true
-                taskList.remove(task)
-                completedTaskList.add(task)
-                taskAdapter.notifyDataSetChanged() // Notify adapter of task removal
-                completedTaskAdapter.notifyDataSetChanged() // Notify adapter of completed task addition
+                taskViewModel.removeTask(task) // Remove the task from ViewModel
+                taskViewModel.addCompletedTask(task) // Add to completed tasks
                 Toast.makeText(requireContext(), "Task '${task.name}' completed!", Toast.LENGTH_SHORT).show()
             }
         }.start()
     }
-
 }
