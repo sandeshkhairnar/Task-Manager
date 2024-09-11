@@ -15,17 +15,16 @@ import androidx.recyclerview.widget.RecyclerView
 
 class TaskAdapter(
     private val lifecycleOwner: LifecycleOwner,
-    private val taskViewModel: TaskViewModel, // ViewModel to handle task data
+    private val taskViewModel: TaskViewModel,
     private val startTaskTimer: (Task) -> Unit
 ) : RecyclerView.Adapter<TaskAdapter.TaskViewHolder>() {
 
     private var taskList: MutableList<Task> = mutableListOf()
 
     init {
-        // Observe the task list from the ViewModel
         taskViewModel.taskList.observe(lifecycleOwner, Observer { tasks ->
             taskList = tasks.toMutableList()
-            notifyDataSetChanged() // Update the adapter when the task list changes
+            notifyDataSetChanged()
         })
     }
 
@@ -34,27 +33,7 @@ class TaskAdapter(
         val countdownTextView: TextView = view.findViewById(R.id.countdownTextView)
         val progressBar: ProgressBar = view.findViewById(R.id.taskProgressBar)
         val pauseResumeButton: Button = view.findViewById(R.id.pauseResumeButton)
-        var countDownTimer: CountDownTimer? = null
-
-        private fun startCountdown(task: Task) {
-            countDownTimer?.cancel() // Cancel any existing timer
-
-            countDownTimer = object : CountDownTimer(task.remainingTime, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    Log.d("TaskAdapter", "OnTick: Task '${task.name}' remainingTime: $millisUntilFinished")
-                    task.remainingTime = millisUntilFinished
-                    updateCountdownText(task)
-                    progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
-                }
-
-                override fun onFinish() {
-                    Log.d("TaskAdapter", "OnFinish: Task '${task.name}' completed.")
-                    task.isCompleted = true
-                    taskViewModel.removeTask(task) // Remove the completed task from ViewModel
-                    startTaskTimer(task) // Optional: handle post-completion actions
-                }
-            }.start()
-        }
+        private var countDownTimer: CountDownTimer? = null
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
@@ -62,26 +41,41 @@ class TaskAdapter(
             progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
             updateCountdownText(task)
 
-            // Set initial button text based on the task state
             pauseResumeButton.text = if (task.isPaused) "Start" else "Pause"
 
-            // Set up pause/resume button click
             pauseResumeButton.setOnClickListener {
                 task.isPaused = !task.isPaused
                 if (task.isPaused) {
                     countDownTimer?.cancel()
+                    countDownTimer = null
                     pauseResumeButton.text = "Start"
                 } else {
                     startCountdown(task)
                     pauseResumeButton.text = "Pause"
                 }
-                taskViewModel.addTask(task) // Update task in ViewModel when paused/resumed
+                taskViewModel.addTask(task)
             }
 
-            // Start countdown if task is not paused and remaining time is valid
             if (!task.isPaused && task.remainingTime > 0) {
                 startCountdown(task)
             }
+        }
+
+        private fun startCountdown(task: Task) {
+            countDownTimer?.cancel()
+            countDownTimer = object : CountDownTimer(task.remainingTime, 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    task.remainingTime = millisUntilFinished
+                    updateCountdownText(task)
+                    progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
+                }
+
+                override fun onFinish() {
+                    task.isCompleted = true
+                    taskViewModel.removeTask(task)
+                    startTaskTimer(task)
+                }
+            }.start()
         }
 
         private fun updateCountdownText(task: Task) {

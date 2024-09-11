@@ -100,7 +100,8 @@ class HomeFragment : Fragment() {
                         description = description,
                         repeatOption = repeatOption,
                         remainingTime = timeAssign,
-                        timeAssign = timeAssign
+                        timeAssign = timeAssign,
+                        isPaused = false // Default value for isPaused
                     )
                     taskViewModel.addTask(task) // Add task to ViewModel
                 } else {
@@ -116,6 +117,7 @@ class HomeFragment : Fragment() {
 
         dialogBuilder.create().show()
     }
+
 
     private fun showTimePickerDialog() {
         val calendar = Calendar.getInstance()

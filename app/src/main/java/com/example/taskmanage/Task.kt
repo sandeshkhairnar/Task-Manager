@@ -14,5 +14,5 @@ data class Task(
     var remainingTime: Long,
     val timeAssign: Long,
     var isCompleted: Boolean = false,
-    var isPaused: Boolean = false
+    var isPaused: Boolean
 )
