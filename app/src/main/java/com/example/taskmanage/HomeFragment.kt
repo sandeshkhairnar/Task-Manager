@@ -76,18 +76,13 @@ class HomeFragment : Fragment() {
             Log.d("HomeFragment", "Ongoing tasks updated: ${ongoingTasks.size}")
 
             val taskRecyclerView: RecyclerView = view?.findViewById(R.id.taskRecyclerView) ?: return@observe
-            val completedRecyclerView: RecyclerView = view?.findViewById(R.id.completedTaskRecyclerView) ?: return@observe
-
             if (ongoingTasks.isNotEmpty()) {
                 taskRecyclerView.visibility = View.VISIBLE
-                adjustRecyclerViewHeight(taskRecyclerView, ongoingTasks.size)
             } else {
                 taskRecyclerView.visibility = View.GONE
             }
 
-            if (taskRecyclerView.visibility == View.GONE && completedRecyclerView.visibility == View.GONE) {
-                completedRecyclerView.visibility = View.GONE
-            }
+            updateVisibility()
         }
 
         taskViewModel.completedTaskList.observe(viewLifecycleOwner) { completedTasks ->
@@ -97,12 +92,23 @@ class HomeFragment : Fragment() {
             val completedRecyclerView: RecyclerView = view?.findViewById(R.id.completedTaskRecyclerView) ?: return@observe
             if (completedTasks.isNotEmpty()) {
                 completedRecyclerView.visibility = View.VISIBLE
-                adjustRecyclerViewHeight(completedRecyclerView, completedTasks.size)
             } else {
                 completedRecyclerView.visibility = View.GONE
             }
+
+            updateVisibility()
         }
     }
+
+    private fun updateVisibility() {
+        val taskRecyclerView: RecyclerView = view?.findViewById(R.id.taskRecyclerView) ?: return
+        val completedRecyclerView: RecyclerView = view?.findViewById(R.id.completedTaskRecyclerView) ?: return
+
+        if (taskRecyclerView.visibility == View.GONE && completedRecyclerView.visibility == View.GONE) {
+            completedRecyclerView.visibility = View.GONE
+        }
+    }
+
 
     private fun observeCurrentTask() {
         taskViewModel.currentTask.observe(viewLifecycleOwner) { task ->
