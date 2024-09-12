@@ -20,6 +20,7 @@ class TaskAdapter(
 
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val taskNameTextView: TextView = view.findViewById(R.id.taskNameTextView)
+        private val taskDescriptionTextView: TextView = view.findViewById(R.id.taskDescriptionTextView) // Add this line
         private val countdownTextView: TextView = view.findViewById(R.id.countdownTextView)
         private val progressBar: ProgressBar = view.findViewById(R.id.taskProgressBar)
         private val pauseResumeButton: Button = view.findViewById(R.id.pauseResumeButton)
@@ -27,6 +28,7 @@ class TaskAdapter(
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
+            taskDescriptionTextView.text = task.description // Bind description here
             progressBar.max = task.timeAssign.toInt()
             progressBar.progress = (task.timeAssign - task.remainingTime).toInt()
             updateCountdownText(task)
@@ -64,6 +66,7 @@ class TaskAdapter(
             countdownTextView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
         }
     }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)

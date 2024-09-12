@@ -19,12 +19,14 @@ class CompletedTaskAdapter(
     inner class CompletedTaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val taskNameTextView: TextView = itemView.findViewById(R.id.completedTaskNameTextView)
         private val completionTimeTextView: TextView = itemView.findViewById(R.id.completionTimeTextView)
-        private val durationTextView: TextView = itemView.findViewById(R.id.taskDurationTextView) // Add this TextView for duration
+        private val durationTextView: TextView = itemView.findViewById(R.id.taskDurationTextView)
+        private val descriptionTextView: TextView = itemView.findViewById(R.id.completedTaskDescriptionTextView) // Add this TextView for description
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
             completionTimeTextView.text = getCurrentTimeFormatted() // Display current date and time
             durationTextView.text = formatDuration(task.assignTimeDuration) // Display formatted duration
+            descriptionTextView.text = task.description // Display task description
             itemView.setOnClickListener { onItemClick(task) }
         }
 
@@ -43,6 +45,7 @@ class CompletedTaskAdapter(
             return String.format("%02d:%02d:%02d", hours, minutes, seconds)
         }
     }
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CompletedTaskViewHolder {
         val view = LayoutInflater.from(parent.context)

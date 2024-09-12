@@ -74,11 +74,33 @@ class HomeFragment : Fragment() {
             val ongoingTasks = tasks.filter { !it.isCompleted }
             taskAdapter.submitList(ongoingTasks)
             Log.d("HomeFragment", "Ongoing tasks updated: ${ongoingTasks.size}")
+
+            val taskRecyclerView: RecyclerView = view?.findViewById(R.id.taskRecyclerView) ?: return@observe
+            val completedRecyclerView: RecyclerView = view?.findViewById(R.id.completedTaskRecyclerView) ?: return@observe
+
+            if (ongoingTasks.isNotEmpty()) {
+                taskRecyclerView.visibility = View.VISIBLE
+                adjustRecyclerViewHeight(taskRecyclerView, ongoingTasks.size)
+            } else {
+                taskRecyclerView.visibility = View.GONE
+            }
+
+            if (taskRecyclerView.visibility == View.GONE && completedRecyclerView.visibility == View.GONE) {
+                completedRecyclerView.visibility = View.GONE
+            }
         }
 
         taskViewModel.completedTaskList.observe(viewLifecycleOwner) { completedTasks ->
             completedTaskAdapter.submitList(completedTasks)
             Log.d("HomeFragment", "Completed tasks updated: ${completedTasks.size}")
+
+            val completedRecyclerView: RecyclerView = view?.findViewById(R.id.completedTaskRecyclerView) ?: return@observe
+            if (completedTasks.isNotEmpty()) {
+                completedRecyclerView.visibility = View.VISIBLE
+                adjustRecyclerViewHeight(completedRecyclerView, completedTasks.size)
+            } else {
+                completedRecyclerView.visibility = View.GONE
+            }
         }
     }
 
@@ -152,7 +174,6 @@ class HomeFragment : Fragment() {
         dialogBuilder.create().show()
     }
 
-
     private fun showTimePickerDialog() {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
@@ -172,5 +193,20 @@ class HomeFragment : Fragment() {
         )
 
         timePickerDialog.show()
+    }
+
+    private fun adjustRecyclerViewHeight(recyclerView: RecyclerView, size: Int) {
+        recyclerView.post {
+            val itemCount = (recyclerView.adapter as? TaskAdapter)?.itemCount ?: 0
+            if (itemCount > 0) {
+                val itemHeight = recyclerView.getChildAt(0)?.height ?: 0
+                val totalHeight = itemCount * itemHeight
+                recyclerView.layoutParams.height = totalHeight
+                recyclerView.requestLayout()
+            } else {
+                recyclerView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                recyclerView.requestLayout()
+            }
+        }
     }
 }

@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="recycler_view_item_height">100dp</dimen> <!-- Height for each item -->
+    <dimen name="recycler_view_spacing">1dp</dimen> <!-- Spacing between items -->
+
+</resources>

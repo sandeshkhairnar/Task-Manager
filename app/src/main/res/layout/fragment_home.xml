@@ -9,28 +9,27 @@
     <!-- Task List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/taskRecyclerView"
-        android:layout_width="418dp"
-        android:layout_height="318dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toTopOf="@id/completedTaskRecyclerView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp" />
 
     <!-- Completed Task List -->
-
-    <!-- Add Task Button -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/completedTaskRecyclerView"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/taskRecyclerView" />
+        app:layout_constraintTop_toBottomOf="@id/taskRecyclerView"
+        android:layout_marginTop="8dp" />
 
+    <!-- Add Task Button -->
     <Button
         android:id="@+id/addTaskButton"
         android:layout_width="wrap_content"
@@ -40,4 +39,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
