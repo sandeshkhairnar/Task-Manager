@@ -117,7 +117,10 @@ class HomeFragment : Fragment() {
                 val taskName = taskNameEditText.text.toString().trim()
                 val timeAssign = selectedTimeInMillis
                 val description = descriptionEditText.text.toString().trim()
-                val repeatOption = repeatSpinner.selectedItem?.toString() ?: "None" // Provide a default value if null
+                val repeatOption = repeatSpinner.selectedItem?.toString() ?: "None"
+
+                // Calculate the assign time duration in minutes
+                val assignTimeDuration = (timeAssign / (60 * 1000)).toInt()
 
                 if (taskName.isNotBlank() && timeAssign > 0) {
                     val task = Task(
@@ -127,12 +130,13 @@ class HomeFragment : Fragment() {
                         repeatOption = repeatOption,
                         remainingTime = timeAssign,
                         timeAssign = timeAssign,
+                        assignTimeDuration = assignTimeDuration, // Pass the calculated duration here
                         isPaused = false,
                         isCompleted = false,
                         completionTime = 0L
                     )
                     taskViewModel.addTask(task)
-                    Log.d("HomeFragment", "New task added: $taskName")
+                    Log.d("HomeFragment", "New task added: $taskName with duration: $assignTimeDuration minutes")
                 } else {
                     Toast.makeText(
                         requireContext(),
@@ -147,6 +151,7 @@ class HomeFragment : Fragment() {
 
         dialogBuilder.create().show()
     }
+
 
     private fun showTimePickerDialog() {
         val calendar = Calendar.getInstance()

@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(entities = [Task::class], version = 2, exportSchema = false)
 abstract class TaskDatabase : RoomDatabase() {
@@ -20,10 +22,19 @@ abstract class TaskDatabase : RoomDatabase() {
                     TaskDatabase::class.java,
                     "task_database"
                 )
-                    .fallbackToDestructiveMigration() // Add this line
+                    .addMigrations(MIGRATION_1_2) // Add migrations if necessary
                     .build()
                 INSTANCE = instance
                 instance
+            }
+        }
+
+        // Example migration from version 1 to 2
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Perform migration queries here
+                // For example, to add a new column:
+                // database.execSQL("ALTER TABLE tasks ADD COLUMN assignTimeDuration INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

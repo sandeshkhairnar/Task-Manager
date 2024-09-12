@@ -13,6 +13,7 @@ data class Task(
     val repeatOption: String,
     var remainingTime: Long,
     val timeAssign: Long,
+    val assignTimeDuration: Int, // Duration in minutes
     var isCompleted: Boolean = false,
     var isPaused: Boolean = false,
     var completionTime: Long = 0 // Changed from String to Long
