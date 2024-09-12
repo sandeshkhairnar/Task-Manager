@@ -13,39 +13,32 @@ import java.util.*
 class CompletedTaskAdapter(
     private val onItemClick: (Task) -> Unit,
     private val viewLifecycleOwner: LifecycleOwner,
-    private val param: (Any) -> Unit
+    function: () -> Unit
 ) : ListAdapter<Task, CompletedTaskAdapter.CompletedTaskViewHolder>(TaskDiffCallback()) {
 
     inner class CompletedTaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val taskNameTextView: TextView = itemView.findViewById(R.id.completedTaskNameTextView)
         private val completionTimeTextView: TextView = itemView.findViewById(R.id.completionTimeTextView)
         private val durationTextView: TextView = itemView.findViewById(R.id.taskDurationTextView)
-        private val descriptionTextView: TextView = itemView.findViewById(R.id.completedTaskDescriptionTextView) // Add this TextView for description
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
-            completionTimeTextView.text = getCurrentTimeFormatted() // Display current date and time
-            durationTextView.text = formatDuration(task.assignTimeDuration) // Display formatted duration
-            descriptionTextView.text = task.description // Display task description
+            completionTimeTextView.text = formatDate(task.completionTime)
+            durationTextView.text = formatDuration(task.assignTimeDuration)
             itemView.setOnClickListener { onItemClick(task) }
         }
 
-        private fun getCurrentTimeFormatted(): String {
-            val date = Date()
-            val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-            return format.format(date)
+        private fun formatDate(timestamp: Long): String {
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            return sdf.format(Date(timestamp))
         }
 
         private fun formatDuration(durationInMinutes: Int): String {
-            val totalSeconds = durationInMinutes * 60
-            val hours = totalSeconds / 3600
-            val minutes = (totalSeconds % 3600) / 60
-            val seconds = totalSeconds % 60
-
-            return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            val hours = durationInMinutes / 60
+            val minutes = durationInMinutes % 60
+            return String.format("%02d:%02d:00", hours, minutes)
         }
     }
-
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CompletedTaskViewHolder {
         val view = LayoutInflater.from(parent.context)

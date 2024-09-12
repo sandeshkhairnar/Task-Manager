@@ -1,8 +1,8 @@
-// File: TaskViewModel.kt
 package com.example.taskmanage
 
 import android.os.CountDownTimer
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +12,15 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
 
     val taskList: LiveData<List<Task>> = repository.getTasks()
     val completedTaskList: LiveData<List<Task>> = repository.getCompletedTasks()
+
+    val allTasks: LiveData<List<Task>> = MediatorLiveData<List<Task>>().apply {
+        addSource(taskList) { tasks ->
+            value = tasks + (completedTaskList.value ?: emptyList())
+        }
+        addSource(completedTaskList) { completedTasks ->
+            value = (taskList.value ?: emptyList()) + completedTasks
+        }
+    }
 
     private val _currentTask = MutableLiveData<Task?>()
     val currentTask: LiveData<Task?> get() = _currentTask
@@ -38,11 +47,14 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         }.start()
     }
 
-    fun completeTask(task: Task) {
-        viewModelScope.launch {
-            repository.deleteTask(task)
-            repository.insertCompletedTask(task.copy(isCompleted = true))
-        }
+    fun addTask(task: Task) = viewModelScope.launch {
+        repository.insertTask(task)
+    }
+
+    fun completeTask(task: Task) = viewModelScope.launch {
+        task.isCompleted = true
+        task.completionTime = System.currentTimeMillis()
+        repository.updateTask(task)
     }
 
     fun pauseTask(task: Task) {
@@ -59,12 +71,6 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     fun stopTaskTimer() {
         countDownTimer?.cancel()
         _currentTask.value = null
-    }
-
-    fun addTask(task: Task) {
-        viewModelScope.launch {
-            repository.insertTask(task)
-        }
     }
 
     fun updateTask(task: Task) {

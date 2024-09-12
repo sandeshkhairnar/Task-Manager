@@ -62,7 +62,7 @@ class HomeFragment : Fragment() {
                 Log.d("HomeFragment", "Completed task clicked: ${task.name}")
             },
             viewLifecycleOwner = viewLifecycleOwner,
-            param = { /* Additional param function if needed */ }
+            function = { /* Additional function if needed */ }
         )
         val completedRecyclerView: RecyclerView = view.findViewById(R.id.completedTaskRecyclerView)
         completedRecyclerView.adapter = completedTaskAdapter
