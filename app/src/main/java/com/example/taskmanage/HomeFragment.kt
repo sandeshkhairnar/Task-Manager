@@ -67,6 +67,17 @@ class HomeFragment : Fragment() {
         val completedRecyclerView: RecyclerView = view.findViewById(R.id.completedTaskRecyclerView)
         completedRecyclerView.adapter = completedTaskAdapter
         completedRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+
+        taskViewModel.completedTaskList.observe(viewLifecycleOwner) { completedTasks ->
+            Log.d("HomeFragment", "Completed tasks updated: ${completedTasks.size}")
+            completedTaskAdapter.submitList(completedTasks)
+
+            if (completedTasks.isNotEmpty()) {
+                completedRecyclerView.visibility = View.VISIBLE
+            } else {
+                completedRecyclerView.visibility = View.GONE
+            }
+        }
     }
 
     private fun observeTaskLists() {

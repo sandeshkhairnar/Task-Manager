@@ -18,11 +18,13 @@ class CompletedTaskAdapter(
 
     inner class CompletedTaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val taskNameTextView: TextView = itemView.findViewById(R.id.completedTaskNameTextView)
+        private val taskDescription: TextView = itemView.findViewById(R.id.completedTaskDescriptionTextView)
         private val completionTimeTextView: TextView = itemView.findViewById(R.id.completionTimeTextView)
         private val durationTextView: TextView = itemView.findViewById(R.id.taskDurationTextView)
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
+            taskDescription.text=task.description
             completionTimeTextView.text = formatDate(task.completionTime)
             durationTextView.text = formatDuration(task.assignTimeDuration)
             itemView.setOnClickListener { onItemClick(task) }
