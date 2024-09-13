@@ -118,11 +118,12 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupAddTaskButton(view: View) {
-        val addTaskButton: Button = view.findViewById(R.id.addTaskButton)
-        addTaskButton.setOnClickListener {
+        val addTaskImageView: ImageView = view.findViewById(R.id.addTaskImageButton)
+        addTaskImageView.setOnClickListener {
             showAddTaskDialog()
         }
     }
+
 
     private fun showAddTaskDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_task, null)

@@ -1,5 +1,6 @@
 package com.example.taskmanage
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,8 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.util.Calendar
-import java.util.Date
+import java.util.*
 
 class ProgressFragment : Fragment() {
 
@@ -25,6 +25,8 @@ class ProgressFragment : Fragment() {
         val repository = TaskRepository(TaskDatabase.getDatabase(requireContext()).taskDao())
         TaskViewModelFactory(repository)
     }
+
+    private val completedDates = mutableSetOf<Long>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,6 +56,20 @@ class ProgressFragment : Fragment() {
             }.time
             updateTasksForDate(selectedDate)
         }
+
+        // Set a custom date change listener to highlight completed dates
+        calendarView.setOnDateChangeListener { view, year, month, dayOfMonth ->
+            val selectedDate = Calendar.getInstance().apply {
+                set(year, month, dayOfMonth)
+            }
+            val dateMillis = selectedDate.timeInMillis
+            if (completedDates.contains(dateMillis)) {
+                view.setBackgroundColor(Color.GREEN)
+            } else {
+                view.setBackgroundColor(Color.TRANSPARENT)
+            }
+            updateTasksForDate(selectedDate.time)
+        }
     }
 
     private fun setupTasksRecyclerView() {
@@ -69,9 +85,23 @@ class ProgressFragment : Fragment() {
 
     private fun observeTasks() {
         taskViewModel.completedTaskList.observe(viewLifecycleOwner) { completedTasks ->
+            updateCompletedDates(completedTasks)
             val currentDate = Calendar.getInstance().time
             updateTasksForDate(currentDate)
         }
+    }
+
+    private fun updateCompletedDates(completedTasks: List<Task>) {
+        completedDates.clear()
+        completedTasks.forEach { task ->
+            val calendar = Calendar.getInstance().apply { timeInMillis = task.completionTime }
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            completedDates.add(calendar.timeInMillis)
+        }
+        calendarView.invalidate() // Force redraw of the calendar
     }
 
     private fun updateTasksForDate(date: Date) {

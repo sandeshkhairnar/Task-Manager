@@ -43,6 +43,7 @@ android {
 dependencies {
     // Room components
     implementation("androidx.room:room-runtime:2.6.1")
+    implementation(libs.engage.core)
     kapt("androidx.room:room-compiler:2.6.1") // Kotlin Annotation Processor
 
     // Other dependencies
