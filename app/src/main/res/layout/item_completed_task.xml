@@ -11,37 +11,53 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/completedTaskNameTextView"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-        <!-- Add this TextView for description -->
-        <TextView
-            android:id="@+id/completedTaskDescriptionTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/completedTaskNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"/>
 
-        <TextView
-            android:id="@+id/completionTimeTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/completedTaskDescriptionTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="16sp"/>
 
-        <TextView
-            android:id="@+id/taskDurationTextView"
+            <TextView
+                android:id="@+id/completionTimeTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/taskDurationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="16sp"/>
+
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/deleteCompletedTaskButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textSize="16sp"/>
+            android:layout_gravity="center_vertical"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Delete task"
+            android:src="@android:drawable/ic_menu_delete" />
 
     </LinearLayout>
 

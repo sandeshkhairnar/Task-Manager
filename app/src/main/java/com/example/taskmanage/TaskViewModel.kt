@@ -47,6 +47,14 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
         }.start()
     }
 
+    fun deleteTask(task: Task) = viewModelScope.launch {
+        repository.deleteTask(task)
+    }
+
+    fun deleteCompletedTask(task: Task) = viewModelScope.launch {
+        repository.deleteTask(task) // Assuming completed tasks are stored in the same table
+    }
+
     fun addTask(task: Task) = viewModelScope.launch {
         repository.insertTask(task)
     }

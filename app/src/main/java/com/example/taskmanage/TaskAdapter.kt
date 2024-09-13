@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
@@ -15,7 +16,8 @@ import androidx.recyclerview.widget.RecyclerView
 class TaskAdapter(
     private val lifecycleOwner: LifecycleOwner,
     private val taskViewModel: TaskViewModel,
-    private val onTaskCompleted: (Task) -> Unit
+    private val onTaskCompleted: (Task) -> Unit,
+    private val onDeleteClick: (Task) -> Unit  // Add this parameter
 ) : ListAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -25,6 +27,7 @@ class TaskAdapter(
         private val progressBar: ProgressBar = view.findViewById(R.id.taskProgressBar)
         private val pauseResumeButton: Button = view.findViewById(R.id.pauseResumeButton)
         private val completeButton: Button = view.findViewById(R.id.completeButton)
+        private val deleteButton: ImageButton = view.findViewById(R.id.deleteTaskButton)
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
@@ -41,6 +44,10 @@ class TaskAdapter(
                     taskViewModel.pauseTask(task)
                 }
                 updateButtonState(task)
+            }
+
+            deleteButton.setOnClickListener {
+                onDeleteClick(task)  // Use the onDeleteClick lambda
             }
 
             completeButton.setOnClickListener {

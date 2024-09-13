@@ -75,8 +75,11 @@ class ProgressFragment : Fragment() {
     private fun setupTasksRecyclerView() {
         completedTaskAdapter = CompletedTaskAdapter(
             onItemClick = { /* Handle completed task click if needed */ },
+            onDeleteClick = { task ->
+                taskViewModel.deleteCompletedTask(task)
+            },
             viewLifecycleOwner = viewLifecycleOwner
-        ) { /* Additional function if needed */ }
+        )
         tasksRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = completedTaskAdapter

@@ -44,12 +44,17 @@ class HomeFragment : Fragment() {
 
     private fun initializeTaskRecyclerView(view: View) {
         taskAdapter = TaskAdapter(
-            viewLifecycleOwner,
-            taskViewModel
-        ) { task ->
-            taskViewModel.completeTask(task)
-            Log.d("HomeFragment", "Task completed: ${task.name}")
-        }
+            lifecycleOwner = viewLifecycleOwner,
+            taskViewModel = taskViewModel,
+            onTaskCompleted = { task ->
+                taskViewModel.completeTask(task)
+                Log.d("HomeFragment", "Task completed: ${task.name}")
+            },
+            onDeleteClick = { task ->
+                taskViewModel.deleteTask(task)
+                Log.d("HomeFragment", "Task deleted: ${task.name}")
+            }
+        )
         val recyclerView: RecyclerView = view.findViewById(R.id.taskRecyclerView)
         recyclerView.adapter = taskAdapter
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
@@ -61,8 +66,11 @@ class HomeFragment : Fragment() {
                 // Handle completed task click if needed
                 Log.d("HomeFragment", "Completed task clicked: ${task.name}")
             },
-            viewLifecycleOwner = viewLifecycleOwner,
-            function = { /* Additional function if needed */ }
+            onDeleteClick = { task ->
+                taskViewModel.deleteCompletedTask(task)
+                Log.d("HomeFragment", "Completed task deleted: ${task.name}")
+            },
+            viewLifecycleOwner = viewLifecycleOwner
         )
         val completedRecyclerView: RecyclerView = view.findViewById(R.id.completedTaskRecyclerView)
         completedRecyclerView.adapter = completedTaskAdapter
@@ -79,6 +87,9 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+    // ... (rest of the code remains the same)
+
 
     private fun observeTaskLists() {
         taskViewModel.taskList.observe(viewLifecycleOwner) { tasks ->

@@ -23,7 +23,7 @@ interface TaskDao {
     suspend fun updateTask(task: Task)
 
     @Delete
-    suspend fun deleteTask(task: com.example.taskmanage.Task)
+    suspend fun deleteTask(task: Task)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCompletedTask(task: Task)
