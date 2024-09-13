@@ -16,6 +16,7 @@ import java.util.*
 class ProgressFragment : Fragment() {
 
     private lateinit var contributionCalendar: GitHubContributionCalendar
+    private lateinit var contributionOverlayView: ContributionOverlayView
     private lateinit var tasksRecyclerView: RecyclerView
     private lateinit var dateTextView: TextView
     private lateinit var noTasksTextView: TextView
@@ -38,6 +39,7 @@ class ProgressFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         contributionCalendar = view.findViewById(R.id.contributionCalendar)
+        contributionOverlayView = view.findViewById(R.id.contributionOverlayView)
         tasksRecyclerView = view.findViewById(R.id.completedTasksRecyclerView)
         dateTextView = view.findViewById(R.id.dateTextView)
         noTasksTextView = view.findViewById(R.id.noTasksTextView)
@@ -49,9 +51,7 @@ class ProgressFragment : Fragment() {
     private fun setupTasksRecyclerView() {
         completedTaskAdapter = CompletedTaskAdapter(
             onItemClick = { /* Handle completed task click if needed */ },
-            onDeleteClick = { task ->
-                taskViewModel.deleteCompletedTask(task)
-            },
+            onDeleteClick = { task -> taskViewModel.deleteCompletedTask(task) },
             viewLifecycleOwner = viewLifecycleOwner
         )
         tasksRecyclerView.apply {
@@ -79,7 +79,7 @@ class ProgressFragment : Fragment() {
             }.timeInMillis
         }.toSet()
 
-        contributionCalendar.setCompletedDates(completedDates)
+        contributionOverlayView.setCompletedDates(completedDates)
     }
 
     private fun updateTasksForDate(date: Long) {

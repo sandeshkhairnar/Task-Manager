@@ -19,7 +19,7 @@ class GitHubContributionCalendar @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr) {
 
     private val calendarView: CalendarView
-    private val contributionView: ContributionView
+    private val contributionOverlayView: ContributionOverlayView
 
     private var completedDates: Set<Long> = emptySet()
 
@@ -30,70 +30,23 @@ class GitHubContributionCalendar @JvmOverloads constructor(
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
         }
 
-        contributionView = ContributionView(context).apply {
-            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, 50)
+        contributionOverlayView = ContributionOverlayView(context).apply {
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
         }
 
         addView(calendarView)
-        addView(contributionView)
+        addView(contributionOverlayView)
 
         calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             val selectedDate = Calendar.getInstance().apply {
                 set(year, month, dayOfMonth)
             }.timeInMillis
-            contributionView.setSelectedDate(selectedDate)
+            // Optionally, update the overlay based on the selected date
         }
     }
 
     fun setCompletedDates(dates: Set<Long>) {
         completedDates = dates
-        contributionView.setCompletedDates(dates)
-    }
-
-    private inner class ContributionView(context: Context) : View(context) {
-        private val paint = Paint()
-        private var selectedDate: Long = 0
-
-        init {
-            paint.style = Paint.Style.FILL
-        }
-
-        fun setSelectedDate(date: Long) {
-            selectedDate = date
-            invalidate()
-        }
-
-        fun setCompletedDates(dates: Set<Long>) {
-            completedDates = dates
-            invalidate()
-        }
-
-        override fun onDraw(canvas: Canvas) {
-            super.onDraw(canvas)
-
-            val dotRadius = 10f
-            val dotSpacing = 20f
-            val startX = width / 2f - (3 * dotSpacing)
-            val centerY = height / 2f
-
-            for (i in -3..3) {
-                val date = Calendar.getInstance().apply {
-                    timeInMillis = selectedDate
-                    add(Calendar.DAY_OF_MONTH, i)
-                }.timeInMillis
-
-                val x = startX + (i + 3) * dotSpacing
-                paint.color = getColorForDate(date)
-                canvas.drawCircle(x, centerY, dotRadius, paint)
-            }
-        }
-
-        private fun getColorForDate(date: Long): Int {
-            return if (date in completedDates) {
-                ContextCompat.getColor(context, R.color.teal_700)
-            } else {
-                ContextCompat.getColor(context, R.color.teal_200)
-            }
-        }
+        contributionOverlayView.setCompletedDates(dates)
     }
 }
