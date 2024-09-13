@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -23,18 +24,28 @@ class CompletedTaskAdapter(
         private val completionTimeTextView: TextView = itemView.findViewById(R.id.completionTimeTextView)
         private val durationTextView: TextView = itemView.findViewById(R.id.taskDurationTextView)
         private val deleteButton: ImageButton = itemView.findViewById(R.id.deleteCompletedTaskButton)
+        private val detailsLayout: ConstraintLayout = itemView.findViewById(R.id.detailsLayout)
 
         fun bind(task: Task) {
             taskNameTextView.text = task.name
             taskDescription.text = task.description
             completionTimeTextView.text = formatDate(task.completionTime)
             durationTextView.text = formatDuration(task.assignTimeDuration)
-            itemView.setOnClickListener { onItemClick(task) }
+
+            // Initially hide the details
+            detailsLayout.visibility = View.GONE
+
+            itemView.setOnClickListener {
+                // Toggle visibility of details when clicked
+                if (detailsLayout.visibility == View.VISIBLE) {
+                    detailsLayout.visibility = View.GONE
+                } else {
+                    detailsLayout.visibility = View.VISIBLE
+                }
+                onItemClick(task)
+            }
             deleteButton.setOnClickListener { onDeleteClick(task) }
         }
-
-        // ... (keep the existing formatDate and formatDuration methods)
-
 
         private fun formatDate(timestamp: Long): String {
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
