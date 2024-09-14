@@ -224,7 +224,7 @@ class HomeFragment : Fragment() {
                         remainingTime = timeAssign,
                         timeAssign = timeAssign,
                         assignTimeDuration = assignTimeDuration,
-                        isPaused = false,
+                        isPaused = true,
                         isCompleted = false,
                         completionTime = 0L
                     )

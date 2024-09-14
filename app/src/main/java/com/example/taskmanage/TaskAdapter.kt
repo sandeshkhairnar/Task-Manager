@@ -17,7 +17,7 @@ class TaskAdapter(
     private val lifecycleOwner: LifecycleOwner,
     private val taskViewModel: TaskViewModel,
     private val onTaskCompleted: (Task) -> Unit,
-    private val onDeleteClick: (Task) -> Unit  // Add this parameter
+    private val onDeleteClick: (Task) -> Unit
 ) : ListAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
     inner class TaskViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -47,7 +47,7 @@ class TaskAdapter(
             }
 
             deleteButton.setOnClickListener {
-                onDeleteClick(task)  // Use the onDeleteClick lambda
+                onDeleteClick(task)
             }
 
             completeButton.setOnClickListener {
@@ -58,6 +58,7 @@ class TaskAdapter(
                 if (currentTask?.id == task.id) {
                     updateCountdownText(currentTask)
                     progressBar.progress = (currentTask.timeAssign - currentTask.remainingTime).toInt()
+                    updateButtonState(currentTask)
                 }
             })
         }
@@ -73,6 +74,9 @@ class TaskAdapter(
             countdownTextView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
         }
     }
+
+    // Rest of the adapter code remains the same
+
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_task, parent, false)
