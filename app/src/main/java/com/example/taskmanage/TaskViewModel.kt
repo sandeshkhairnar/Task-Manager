@@ -39,9 +39,7 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
             }
 
             override fun onFinish() {
-                task.isCompleted = true
-                removeTask(task)
-                addCompletedTask(task)
+                completeTask(task)
                 _currentTask.value = null
             }
         }.start()
@@ -62,7 +60,8 @@ class TaskViewModel(private val repository: TaskRepository) : ViewModel() {
     fun completeTask(task: Task) = viewModelScope.launch {
         task.isCompleted = true
         task.completionTime = System.currentTimeMillis()
-        repository.updateTask(task)
+        repository.deleteTask(task)  // Remove from active tasks
+        repository.insertCompletedTask(task)  // Add to completed tasks
     }
 
     fun pauseTask(task: Task) {

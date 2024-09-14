@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Task Book</string>
+    <string name="prev_month" />
+    <string name="next_month" />
 </resources>

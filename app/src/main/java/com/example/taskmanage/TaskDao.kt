@@ -12,10 +12,8 @@ import androidx.room.Update
 interface TaskDao {
     @Query("SELECT * FROM tasks WHERE isCompleted = 0")
     fun getTasks(): LiveData<List<Task>>
-
-    @Query("SELECT * FROM tasks WHERE isCompleted = 1")
+    @Query("SELECT * FROM tasks WHERE isCompleted = 1 ORDER BY completionTime DESC")
     fun getCompletedTasks(): LiveData<List<Task>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTask(task: Task)
 
