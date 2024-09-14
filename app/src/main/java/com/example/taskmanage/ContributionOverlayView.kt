@@ -15,13 +15,13 @@ class ContributionOverlayView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
     private val paint = Paint().apply {
-        color = Color.parseColor("#8040B665") // More green, with a slight reduction in red
+        color = Color.parseColor("#8040B665") // Semi-transparent green overlay
         style = Paint.Style.FILL
-        isAntiAlias = true // For smoother circles
+        isAntiAlias = true
     }
 
     private val currentDatePaint = Paint().apply {
-        color = Color.parseColor("#FFB865") // Orange color for the current date
+        color = Color.parseColor("#FFB865") // Orange for current date
         style = Paint.Style.FILL
         isAntiAlias = true
     }
@@ -29,29 +29,30 @@ class ContributionOverlayView @JvmOverloads constructor(
     private var completedDates: Set<Long> = emptySet()
     private var currentDate: Long = Calendar.getInstance().timeInMillis
 
-    // Set the completed dates and redraw the view
     fun setCompletedDates(dates: Set<Long>) {
         completedDates = dates
-        invalidate() // Request a redraw
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val dotRadius = (width * 0.05f).coerceAtMost(height * 0.05f) // Dynamic radius based on view size
-        val dotSpacing = width / 7f // One for each day of the week
+        val dotRadius = (width * 0.04f).coerceAtMost(height * 0.04f) // Slightly smaller radius
+        val dotSpacing = width / 7f
+        val verticalOffset = height * 0.11f
+        val horizontalOffset = height * -0.065f // Adjust this value to move circles left or right
 
-        // Loop through completed dates and draw circles
         for (date in completedDates) {
             val calendar = Calendar.getInstance().apply {
                 timeInMillis = date
             }
-            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1 // Sunday = 0, Saturday = 6
-            val x = (dayOfWeek * dotSpacing) + (dotSpacing / 2) // Position the dot in the center of its "day"
-            val y = height / 2f // Center vertically
+            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
+            val x = (dayOfWeek * dotSpacing) + (dotSpacing / 2) + horizontalOffset
+            val y = (height / 2f) + verticalOffset // Adjusted y-position
 
             val paintToUse = if (date == currentDate) currentDatePaint else paint
             canvas.drawCircle(x, y, dotRadius, paintToUse)
         }
     }
+
 }

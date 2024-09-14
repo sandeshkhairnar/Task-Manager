@@ -1,8 +1,6 @@
 package com.example.taskmanage
 
-
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +14,6 @@ import java.util.*
 class ProgressFragment : Fragment() {
 
     private lateinit var contributionCalendar: GitHubContributionCalendar
-    private lateinit var contributionOverlayView: ContributionOverlayView
     private lateinit var tasksRecyclerView: RecyclerView
     private lateinit var dateTextView: TextView
     private lateinit var noTasksTextView: TextView
@@ -39,13 +36,16 @@ class ProgressFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         contributionCalendar = view.findViewById(R.id.contributionCalendar)
-        contributionOverlayView = view.findViewById(R.id.contributionOverlayView)
         tasksRecyclerView = view.findViewById(R.id.completedTasksRecyclerView)
         dateTextView = view.findViewById(R.id.dateTextView)
         noTasksTextView = view.findViewById(R.id.noTasksTextView)
 
         setupTasksRecyclerView()
         observeTasks()
+
+        contributionCalendar.setOnDateChangeListener { date ->
+            updateTasksForDate(date)
+        }
     }
 
     private fun setupTasksRecyclerView() {
@@ -63,8 +63,6 @@ class ProgressFragment : Fragment() {
     private fun observeTasks() {
         taskViewModel.completedTaskList.observe(viewLifecycleOwner) { completedTasks ->
             updateCompletedDates(completedTasks)
-            val currentDate = Calendar.getInstance().timeInMillis
-            updateTasksForDate(currentDate)
         }
     }
 
@@ -79,7 +77,7 @@ class ProgressFragment : Fragment() {
             }.timeInMillis
         }.toSet()
 
-        contributionOverlayView.setCompletedDates(completedDates)
+        contributionCalendar.setCompletedDates(completedDates)
     }
 
     private fun updateTasksForDate(date: Long) {
