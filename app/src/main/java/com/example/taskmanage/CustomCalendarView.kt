@@ -4,12 +4,11 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import java.util.*
+import java.util.Calendar
 
 class CustomCalendarView @JvmOverloads constructor(
     context: Context,

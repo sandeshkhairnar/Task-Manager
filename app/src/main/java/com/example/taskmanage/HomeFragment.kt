@@ -3,6 +3,7 @@ package com.example.taskmanage
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import java.util.*
+import kotlin.math.abs
 
 class HomeFragment : Fragment() {
 
@@ -25,6 +27,9 @@ class HomeFragment : Fragment() {
     private lateinit var completedTaskAdapter: CompletedTaskAdapter
     private lateinit var timeAssignTextView: TextView
     private var selectedTimeInMillis: Long = 0
+    private lateinit var addTaskImageButton: ImageView
+    private var dX: Float = 0f
+    private var dY: Float = 0f
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -88,9 +93,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // ... (rest of the code remains the same)
-
-
     private fun observeTaskLists() {
         taskViewModel.taskList.observe(viewLifecycleOwner) { tasks ->
             val ongoingTasks = tasks.filter { !it.isCompleted }
@@ -131,7 +133,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-
     private fun observeCurrentTask() {
         taskViewModel.currentTask.observe(viewLifecycleOwner) { task ->
             // Update UI when a task is running or completed
@@ -140,12 +141,53 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupAddTaskButton(view: View) {
-        val addTaskImageView: ImageView = view.findViewById(R.id.addTaskImageButton)
-        addTaskImageView.setOnClickListener {
+        addTaskImageButton = view.findViewById(R.id.addTaskImageButton)
+
+        // Reset button position to bottom right corner
+        addTaskImageButton.post {
+            addTaskImageButton.x = (view.width - addTaskImageButton.width - 16f * resources.displayMetrics.density)
+            addTaskImageButton.y = (view.height - addTaskImageButton.height - 16f * resources.displayMetrics.density)
+        }
+
+        var startX = 0f
+        var startY = 0f
+        var isMoved = false
+
+        addTaskImageButton.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    startX = event.rawX
+                    startY = event.rawY
+                    dX = v.x - event.rawX
+                    dY = v.y - event.rawY
+                    isMoved = false
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val movedX = event.rawX + dX
+                    val movedY = event.rawY + dY
+                    v.animate()
+                        .x(movedX)
+                        .y(movedY)
+                        .setDuration(0)
+                        .start()
+                    isMoved = true
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (!isMoved || (abs(event.rawX - startX) < 10 && abs(event.rawY - startY) < 10)) {
+                        v.performClick()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+
+        addTaskImageButton.setOnClickListener {
             showAddTaskDialog()
         }
     }
-
 
     private fun showAddTaskDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_task, null)
@@ -181,7 +223,7 @@ class HomeFragment : Fragment() {
                         repeatOption = repeatOption,
                         remainingTime = timeAssign,
                         timeAssign = timeAssign,
-                        assignTimeDuration = assignTimeDuration, // Pass the calculated duration here
+                        assignTimeDuration = assignTimeDuration,
                         isPaused = false,
                         isCompleted = false,
                         completionTime = 0L

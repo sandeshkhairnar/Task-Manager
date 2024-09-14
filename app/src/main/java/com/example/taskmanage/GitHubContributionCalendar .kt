@@ -2,15 +2,10 @@ package com.example.taskmanage
 
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.util.AttributeSet
-import android.view.View
 import android.widget.CalendarView
 import android.widget.LinearLayout
-import androidx.core.content.ContextCompat
-import com.example.taskmanage.R
-import java.util.*
+import java.util.Calendar
 
 class GitHubContributionCalendar @JvmOverloads constructor(
     context: Context,
