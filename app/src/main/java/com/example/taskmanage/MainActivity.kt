@@ -1,5 +1,6 @@
 package com.example.taskmanage
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -48,8 +49,15 @@ class MainActivity : AppCompatActivity() {
         } else {
             bottomNavigationView.selectedItemId = savedInstanceState.getInt("selectedItemId", R.id.navigation_home)
         }
-    }
 
+        startBackgroundService()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop the background service when the activity is destroyed
+        val serviceIntent = Intent(this, BackgroundService::class.java)
+        stopService(serviceIntent)
+    }
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt("selectedItemId", bottomNavigationView.selectedItemId)
@@ -78,6 +86,11 @@ class MainActivity : AppCompatActivity() {
                 bottomNavigationView.selectedItemId = R.id.navigation_home
             }
         }
+    }
+
+    private fun startBackgroundService() {
+        val serviceIntent = Intent(this, BackgroundService::class.java)
+        startService(serviceIntent)
     }
 
     override fun onResume() {

@@ -21,16 +21,19 @@ class CustomPieChart @JvmOverloads constructor(
         style = Paint.Style.FILL
         isAntiAlias = true
         color = Color.BLACK
-        textSize = 30f
+        textSize = 24f
         textAlign = Paint.Align.LEFT
     }
     private val rect = RectF()
     private var data: List<TaskSlice> = emptyList()
-    private val centerHole = 0.6f // Percentage of radius to leave as hole
+    private val centerHole = 0.6f
     private var selectedSliceIndex: Int = -1
-    private val selectedSliceOffset = 20f // How much to offset the selected slice
-    private val minLabelDistance = 120f // Increased minimum distance between label and pie edge
-    private val maxLabelLength = 10 // Maximum number of characters for a label before truncating
+    private val selectedSliceOffset = 20f
+    private val minLabelDistance = 30f // Reduced for closer positioning
+    private val labelPadding = 10f // Reduced for closer positioning
+    private val maxLabelLength = 10
+    private val labelOffset = 1.1f // Reduced to bring labels closer
+    private val leftSideLabelOffset = 25f // Reduced for closer positioning
 
     data class TaskSlice(val name: String, val duration: Int, val color: Int)
 
@@ -47,7 +50,7 @@ class CustomPieChart @JvmOverloads constructor(
         val total = data.sumOf { it.duration.toDouble() }.toFloat()
         var startAngle = 0f
 
-        val diameter = min(width, height).toFloat() * 0.7f // Further reduced chart size to 70%
+        val diameter = min(width, height).toFloat() * 0.8f // Increased chart size
         val radius = diameter / 2f - selectedSliceOffset
         val centerX = width / 2f
         val centerY = height / 2f
@@ -59,12 +62,13 @@ class CustomPieChart @JvmOverloads constructor(
             centerY + radius
         )
 
+        val labelPositions = mutableListOf<Triple<PointF, String, Boolean>>()
+
         data.forEachIndexed { index, slice ->
             val sweepAngle = 360f * (slice.duration / total)
             paint.color = slice.color
 
             if (index == selectedSliceIndex) {
-                // Draw selected slice larger
                 val midAngle = Math.toRadians((startAngle + sweepAngle / 2).toDouble())
                 val offsetX = (cos(midAngle) * selectedSliceOffset).toFloat()
                 val offsetY = (sin(midAngle) * selectedSliceOffset).toFloat()
@@ -76,68 +80,102 @@ class CustomPieChart @JvmOverloads constructor(
                 canvas.drawArc(rect, startAngle, sweepAngle, true, paint)
             }
 
-            // Draw labels
             val midAngle = Math.toRadians((startAngle + sweepAngle / 2).toDouble())
-            val labelRadius = radius * 1.2f + (if (index == selectedSliceIndex) selectedSliceOffset else 0f)
+            val labelRadius = radius * labelOffset + (if (index == selectedSliceIndex) selectedSliceOffset else 0f)
             var x = (centerX + cos(midAngle) * labelRadius).toFloat()
             var y = (centerY + sin(midAngle) * labelRadius).toFloat()
 
-            // Adjust label position if it's too close to the edge
-            val distanceToRightEdge = width - x
-            val distanceToLeftEdge = x
-            val distanceToTopEdge = y
-            val distanceToBottomEdge = height - y
-
-            if (distanceToRightEdge < minLabelDistance) {
-                x = width - minLabelDistance
-            } else if (distanceToLeftEdge < minLabelDistance) {
-                x = minLabelDistance
+            // Adjust position for left side labels
+            if (x < centerX) {
+                x -= leftSideLabelOffset
+            } else {
+                x += leftSideLabelOffset
             }
 
-            if (distanceToTopEdge < minLabelDistance) {
-                y = minLabelDistance
-            } else if (distanceToBottomEdge < minLabelDistance) {
-                y = height - minLabelDistance
-            }
-
-            // Truncate label if it's too long
             val truncatedName = if (slice.name.length > maxLabelLength)
                 slice.name.substring(0, maxLabelLength) + "..."
             else
                 slice.name
 
-            // Increase text size for selected slice and show duration
-            if (index == selectedSliceIndex) {
-                textPaint.textSize = 40f
-                textPaint.isFakeBoldText = true
-                canvas.drawText(truncatedName, x, y, textPaint)
-                canvas.drawText(formatDuration(slice.duration), x, y + 45f, textPaint)
-            } else {
-                textPaint.textSize = 30f
-                textPaint.isFakeBoldText = false
-                canvas.drawText(truncatedName, x, y, textPaint)
-            }
+            labelPositions.add(Triple(PointF(x, y), truncatedName, index == selectedSliceIndex))
 
             startAngle += sweepAngle
         }
 
-        // Draw center hole
+        val adjustedLabelPositions = adjustLabelPositions(labelPositions, centerX, centerY)
+
+        adjustedLabelPositions.forEach { (point, label, isSelected) ->
+            textPaint.textSize = 24f
+            textPaint.isFakeBoldText = isSelected
+
+            // Adjust text alignment based on position
+            if (point.x < centerX) {
+                textPaint.textAlign = Paint.Align.RIGHT
+            } else {
+                textPaint.textAlign = Paint.Align.LEFT
+            }
+
+            canvas.drawText(label, point.x, point.y, textPaint)
+
+            if (isSelected) {
+                val slice = data[selectedSliceIndex]
+                val durationText = formatDuration(slice.duration)
+                canvas.drawText(durationText, point.x, point.y + 30f, textPaint)
+            }
+        }
+
         paint.color = Color.WHITE
         canvas.drawCircle(centerX, centerY, radius * centerHole, paint)
     }
 
-    // ... (rest of the class remains the same)
+    private fun adjustLabelPositions(
+        labelPositions: List<Triple<PointF, String, Boolean>>,
+        centerX: Float,
+        centerY: Float
+    ): List<Triple<PointF, String, Boolean>> {
+        val adjustedPositions = labelPositions.toMutableList()
+
+        for (i in adjustedPositions.indices) {
+            val (point, label, isSelected) = adjustedPositions[i]
+            var newX = point.x
+            var newY = point.y
+
+            // Ensure labels don't go off-screen
+            val textWidth = textPaint.measureText(label)
+            if (newX < centerX) {
+                newX = newX.coerceIn(textWidth, centerX - minLabelDistance)
+            } else {
+                newX = newX.coerceIn(centerX + minLabelDistance, width - textWidth)
+            }
+            newY = newY.coerceIn(textPaint.textSize, height - textPaint.textSize)
+
+            for (j in 0 until i) {
+                val (otherPoint, _, _) = adjustedPositions[j]
+                val distance = sqrt((newX - otherPoint.x).pow(2) + (newY - otherPoint.y).pow(2))
+                if (distance < minLabelDistance) {
+                    val angle = atan2(newY - centerY, newX - centerX)
+                    newX = (centerX + cos(angle) * (labelOffset * rect.width() / 2 + labelPadding)).toFloat()
+                    newY = (centerY + sin(angle) * (labelOffset * rect.height() / 2 + labelPadding)).toFloat()
+                }
+            }
+
+            adjustedPositions[i] = Triple(PointF(newX, newY), label, isSelected)
+        }
+
+        return adjustedPositions
+    }
+
+    // ... (onTouchEvent and formatDuration methods remain the same)
+
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
             val x = event.x - (width / 2f)
             val y = event.y - (height / 2f)
 
-            // Calculate the angle of the touch point
             var angle = Math.toDegrees(atan2(y.toDouble(), x.toDouble())).toFloat()
             if (angle < 0) angle += 360f
 
-            // Find which slice was touched
             var startAngle = 0f
             val total = data.sumOf { it.duration.toDouble() }.toFloat()
 
@@ -160,6 +198,4 @@ class CustomPieChart @JvmOverloads constructor(
         val seconds = durationInSeconds % 60
         return String.format("%02d:%02d:%02d", hours, minutes, seconds)
     }
-
-
 }
